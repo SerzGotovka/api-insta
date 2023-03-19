@@ -32,12 +32,6 @@ class CustomUser(AbstractUser, PermissionsMixin):
     def display_follows(self):
         return ", ".join([user.username for user in self.follows.all()])
 
-    def number_of_followers(self):
-        if self.followers.count():
-            return self.followers.count()
-        else:
-            return 0
-
     def number_of_follows(self):
         return len([user for user in self.follows.all()]) if [user for user in self.follows.all()] else 0
 
