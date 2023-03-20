@@ -34,9 +34,6 @@ urlpatterns = [
     # Просмотр подписчиков по юзеру
     path('<slug:username>/get-followers/', views.GetFollowersView.as_view(), name='get-followers'),
 
-
-    path('<slug:username>/follow/', views.FollowUserView.as_view(), name='follow-user'),
-
     # Просмотр наличия лайка по посту
     path('like/<int:post_id>/', views.LikeView.as_view(), name='like'),
 
