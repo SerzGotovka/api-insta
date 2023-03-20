@@ -13,17 +13,19 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
+    number_of_comments = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'photo', 'text', 'user', 'created']
+        fields = ['id', 'title', 'photo', 'text', 'user', 'number_of_comments', 'number_of_likes', 'created',
+                  'comments']
 
     def get_number_of_comments(self, obj):
         return Comment.objects.filter(post=obj).count()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    posts = serializers.SlugRelatedField(read_only=True, many=True, slug_field='title')
     follows = serializers.SlugRelatedField(read_only=True, many=True, slug_field='username')
     posts = PostSerializer(many=True, read_only=True)
     number_of_posts = serializers.SerializerMethodField()
@@ -37,14 +39,14 @@ class UserSerializer(serializers.ModelSerializer):
         return Post.objects.filter(user=obj).count()
 
 
-class UserPostsSerializer(serializers.ModelSerializer):
-    number_of_comments = serializers.SerializerMethodField()
+class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Post
-        fields = ('id', 'photo', 'text', 'location', 'number_of_likes',
-                  'number_of_comments', 'posted_on')
+        model = CustomUser
+        fields = ('username', 'photo', 'email', 'bio', 'number_of_follows', 'number_of_followers')
 
-    def get_number_of_comments(self, obj):
-        return Comment.objects.filter(post=obj).count()
+
+
+
+
 

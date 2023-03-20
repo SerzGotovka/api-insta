@@ -19,6 +19,12 @@ class Post(models.Model):
     def likesCount(self):
         return len([like for like in self.likes.all()]) if [like for like in self.likes.all()] else 0
 
+    def number_of_likes(self):
+        if self.likes.count():
+            return self.likes.count()
+        else:
+            return 0
+
     class Meta:
         ordering = ['-created']
 
@@ -30,5 +36,5 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
 
     def __str__(self):
-        return self.content
+        return self.user
 
