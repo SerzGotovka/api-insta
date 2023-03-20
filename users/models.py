@@ -14,6 +14,8 @@ class CustomUser(AbstractUser, PermissionsMixin):
     bio = models.TextField(null=True, blank=True)
     follows = models.ManyToManyField(
         'CustomUser', blank=True, related_name='followers')
+    following = models.ManyToManyField(
+        'CustomUser', blank=True, related_name='followings')
     facebook_username = models.TextField(blank=True)
 
     is_staff = models.BooleanField(default=False)
@@ -32,8 +34,11 @@ class CustomUser(AbstractUser, PermissionsMixin):
     def display_follows(self):
         return ", ".join([user.username for user in self.follows.all()])
 
+    def display_following(self):
+        return ", ".join([user.username for user in self.following.all()])
+
     def number_of_follows(self):
         return len([user for user in self.follows.all()]) if [user for user in self.follows.all()] else 0
 
     def number_of_followers(self):
-        return len([user for user in self.followers.all()]) if [user for user in self.followers.all()] else 0
+        return len([user for user in self.following.all()]) if [user for user in self.following.all()] else 0

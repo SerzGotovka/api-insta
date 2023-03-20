@@ -1,5 +1,5 @@
 from . import serializers
-from django.forms import model_to_dict
+from .serializers import FollowSerializer, PostSerializer, UserSerializer
 from rest_framework import generics
 from users.models import CustomUser
 from insta.models import Post, Comment
@@ -32,9 +32,9 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class PostsByUser(APIView):
 
-    def get(self, request, id):
-        posts_by_user = Post.objects.filter(user__id=id)
-        serializer = serializers.UserPostsSerializer(posts_by_user, many=True)
+    def get(self, request, pk):
+        posts_by_user = Post.objects.filter(user__pk=pk)
+        serializer = serializers.PostSerializer(posts_by_user, many=True)
 
         return Response(serializer.data)
 
@@ -50,8 +50,8 @@ class CommentByPost(APIView):
 
 class CommentByUser(APIView):
 
-    def get(self, request, id):
-        comment_by_user = Comment.objects.filter(user__id=id)
+    def get(self, request, pk):
+        comment_by_user = Comment.objects.filter(user__pk=pk)
         serializer = serializers.CommentSerializer(comment_by_user, many=True)
 
         return Response(serializer.data)
@@ -70,6 +70,71 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.CommentSerializer
 
 
+class GetFollowersView(generics.ListAPIView):
+    serializer_class = FollowSerializer
+
+    def get_queryset(self):
+        username = self.kwargs['username']
+        queryset = CustomUser.objects.get(
+            username=username).followers.all()
+        return queryset
 
 
+class LikeView(APIView):
 
+    def get(self, request, format=None, post_id=None):
+        post = Post.objects.get(pk=post_id)
+        user = self.request.user
+        if user.is_authenticated:
+            if user in post.likes.all():
+                like = False
+                post.likes.remove(user)
+            else:
+                like = True
+                post.likes.add(user)
+        data = {
+            'like': like
+        }
+        return Response(data)
+
+
+class GetLikersView(generics.ListAPIView):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs['post_id']
+        queryset = Post.objects.get(
+            pk=post_id).likes.all()
+        return queryset
+
+
+class UserFeedView(generics.ListAPIView):
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        following_users = user.following.all()
+        queryset = Post.objects.all().filter(author__in=following_users)
+        return queryset
+
+
+class FollowUserView(APIView):
+
+    def get(self, request, format=None, username=None):
+        to_user = CustomUser.objects.get(username=username)
+        from_user = self.request.user
+        follow = None
+        if from_user.is_authenticated:
+            if from_user != to_user:
+                if from_user in to_user.followers.all():
+                    follow = False
+                    from_user.following.remove(to_user)
+                    to_user.followers.remove(from_user)
+                else:
+                    follow = True
+                    from_user.following.add(to_user)
+                    to_user.followers.add(from_user)
+        data = {
+            'follow': follow
+        }
+        return Response(data)
